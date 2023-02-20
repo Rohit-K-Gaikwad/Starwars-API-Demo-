@@ -13,97 +13,173 @@ in the movie.
 
 import json
 import requests
+import argparse
 
 from pprint import pprint
 from typing import Dict, List
 
-from utils.fetch_data import hit_url
-
+from utils.fetch_data import hit_url, fetch_data
 
 FIRST_FILM_URL = "https://swapi.dev/api/films/1/"
+
+
+def first_film_data() -> Dict:
+    """Returns a dict object from swapi.dev/api/films/1"""
+
+    response = requests.get(FIRST_FILM_URL)
+
+    result_ = response.json()
+
+    write_data_into_file(result_)
+    return result_
 
 
 def write_data_into_file(data: Dict) -> None:
     """writes dict data into a file"""
 
     with open("output.txt", "w") as fp:
+
         fp.write(json.dumps(data))
 
 
-def first_task() -> Dict:
-    """Returns a dict object from swapi.dev/api/films/1"""
+def characters_data(data_: Dict, resource: str) -> List:
+    """pull data from swapi characters name sequentially for first film"""
 
-    response = requests.get(FIRST_FILM_URL)
-    result_ = response.json()
-    write_data_into_file(result_)
-    return result_
+    characters = data_.get(resource)  # returns None by default
+    char_names = []
 
-
-def second_task(data_: Dict) -> List:
-    """pull data from swapi characters sequentially"""
-
-    characters = data_.get("characters")  # returns None by default
-
-    characters_names = []
     for character in characters:
         character_data = hit_url(character)
-        character_data = character_data.json()
-        characters_names.append(character_data.get("name"))
 
-    # names = []
+        character_data = character_data.json()
+        char_names.append(character_data.get("name"))
+
     # all_characters = fetch_data(characters)
     # for character in all_characters:
-    #     names.append(character.get("name"))
+    #     char_names.append(character.get("name"))
 
-    return characters_names
+    return char_names
 
 
-def third_task(data_: Dict) -> List:
-    """pull data from swapi planets sequentially"""
+def planets_data(data_: Dict, resource: str) -> List:
+    """pull data from swapi planets name sequentially for first film"""
 
-    planets = data_.get("planets")  # returns None by default
+    planets = data_.get(resource)  # returns None by default
 
     planets_names = []
     for planet in planets:
-        planet_data = hit_url(planet)
-        planet_data = planet_data.json()
+        planets_data = hit_url(planet)
+
+        planet_data = planets_data.json()
         planets_names.append(planet_data.get("name"))
 
     return planets_names
 
 
-def fourth_task(data_: Dict) -> List:
-    """pull data from swapi vehicles sequentially"""
+def vehicles_data(data_: Dict, resource: str) -> List:
+    """pull data from swapi vehicles name sequentially for first film"""
 
-    vehicles = data_.get("vehicles")  # returns None by default
+    vehicles = data_.get("{}".format(resource))  # returns None by default
 
     vehicles_names = []
     for vehicle in vehicles:
-        vehicle_data = hit_url(vehicle)
-        vehicle_data = vehicle_data.json()
+        vehicles_data = hit_url(vehicle)
+
+        vehicle_data = vehicles_data.json()
         vehicles_names.append(vehicle_data.get("name"))
 
     return vehicles_names
 
 
-if __name__ == "__main__":
+def species_data(data_: Dict, resource: str) -> List:
+    """pull data from swapi species name sequentially for first film"""
+
+    species = data_.get("{}".format(resource))  # returns None by default
+
+    species_names = []
+    for specie in species:
+        species_data = hit_url(specie)
+
+        species_data = species_data.json()
+        species_names.append(species_data.get("name"))
+
+    return species_names
+
+
+def starships_data(data_: Dict, resource: str) -> List:
+    """pull data from swapi species name sequentially for first film"""
+
+    starships = data_.get("{}".format(resource))  # returns None by default
+
+    starships_names = []
+    for starship in starships:
+        starships_data = hit_url(starship)
+
+        starships_data = starships_data.json()
+        starships_names.append(starships_data.get("name"))
+
+    return starships_names
+
+
+def main():
+    """parse data to methods and fetch data according to user inputs. default = `characters` """
+
+    parser = argparse.ArgumentParser(
+        prog="starwarsAPI",
+        usage="Fetches resources from swapi.dev for films based "
+              "on whatever arguments we provide",
+        description="It uses planet, characters, vehicles and uses requests library "
+                    "to get values from the swapi.dev for first film"
+    )
+
+    # we are creating an option to get respective data
+    parser.add_argument('-c', '--char', type=str,
+                        default="characters",
+                        help="helps to fetch data of characters from first film")
+    parser.add_argument('-p', '--planet', type=str,
+                        help="helps to fetch data of planets from first film")
+    parser.add_argument('-v', '--vehicle', type=str,
+                        help="helps to fetch data of vehicles from first film")
+    parser.add_argument('-s', '--specie', type=str,
+                        help="helps to fetch data of species from first film")
+    parser.add_argument('-S', '--starship', type=str,
+                        help="helps to fetch data of starships from first film")
+
+    arguments = parser.parse_args()
+
+    print(f"parsed arguments are - {arguments}")
 
     # first task
-    first_result = first_task()
-    print("First Result")
+    first_result = first_film_data()
+    print(f"First Film Data: \n")
     pprint(first_result)
 
-    # second task : capture characters
-    second_result = second_task(first_result)
-    print("Second Result")
-    pprint(second_result)
+    if arguments.char == "characters":
+        char_result = characters_data(first_result, arguments.char)
+        print(f"\nCharacters in First film: ", end="")
+        pprint(char_result)
 
-    # third task : capture planets
-    third_result = third_task(first_result)
-    print("Third Result")
-    pprint(third_result)
+    if arguments.planet == "planets":
+        planet_result = planets_data(first_result, arguments.planet)
+        print(f"\nPlanets in First Film: ", end="")
+        pprint(planet_result)
 
-    # fourth task : capture vehicles
-    fourth_result = fourth_task(first_result)
-    print("Fourth Result")
-    pprint(fourth_result)
+    if arguments.vehicle == "vehicles":
+        vehicle_result = vehicles_data(first_result, arguments.vehicle)
+        print(f"\nVehicles in First Film:", end="")
+        pprint(vehicle_result)
+
+    if arguments.specie == "species":
+        species_result = species_data(first_result, arguments.specie)
+        print(f"\nSpecies in First Film: ", end="")
+        pprint(species_result)
+
+    if arguments.starship == "starships":
+        starships_result = starships_data(first_result, arguments.starship)
+        print(f"\nStarships in First Film: ", end="")
+        pprint(starships_result)
+
+
+if __name__ == "__main__":
+
+    main()
